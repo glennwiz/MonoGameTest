@@ -6,6 +6,8 @@ namespace TestingMonoGame
 {
     public class Game1 : Game
     {
+        private Texture2D ballTexture;
+        
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
 
@@ -27,6 +29,8 @@ namespace TestingMonoGame
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
+            ballTexture = Content.Load<Texture2D>("ball");
+
             // TODO: use this.Content to load your game content here
         }
 
@@ -44,7 +48,9 @@ namespace TestingMonoGame
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+             spriteBatch.Begin();
+             spriteBatch.Draw(ballTexture, new Vector2(0, 0), Color.White);
+             spriteBatch.End();
 
             base.Draw(gameTime);
         }
