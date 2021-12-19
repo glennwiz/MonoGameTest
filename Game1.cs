@@ -45,7 +45,6 @@ namespace TestingMonoGame
             texture = new Texture2D(GraphicsDevice, 1, 1);
             texture.SetData(new Color[] { Color.DarkSlateGray });
 
-          
             base.Initialize();
         }
 
@@ -55,85 +54,68 @@ namespace TestingMonoGame
 
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData<Color>(new Color[] { Color.White });
+            
             bigRectangle = new Rectangle(200, 100, 300, 150);
             smallRectangle = new Rectangle(600, 150, 50, 50);
+            
             smallRectangleColor = Color.White;
-
-         
         }
 
-        private int R = 0;
-        private int G = 15;
-        private int B = 50;
+        private int R = 51;
+        private int G = 255;
+        private int B = 255;
         private Direction R_direction = Direction.Front;
         private Direction G_direction = Direction.Front;
         private Direction B_direction = Direction.Front;
-        
+
+        private float LerpValue = 0.0f;
+        private Direction LerpDirection = Direction.Front;
         protected override void Update(GameTime gameTime)
         {
-            switch (R_direction)
-            {
-                case Direction.Front when R == 255:
-                    R_direction = Direction.Back;
-                    break;
-                case Direction.Back when R == 0:
-                    R_direction = Direction.Front;
-                    break;
-            }
-
-            switch (G_direction)
-            {
-                case Direction.Front when G == 255:
-                    G_direction = Direction.Back;
-                    break;
-                case Direction.Back when G == 0:
-                    G_direction = Direction.Front;
-                    break;
-            }
+            R_direction = ShouldWeFlipDirection(R_direction, R);
+            G_direction = ShouldWeFlipDirection(G_direction, G);
+            B_direction = ShouldWeFlipDirection(B_direction, B);
             
-            switch (B_direction)
-            {
-                case Direction.Front when B == 255:
-                    B_direction = Direction.Back;
-                    break;
-                case Direction.Back when B == 0:
-                    B_direction = Direction.Front;
-                    break;
-            }
+            R = GetNext(R_direction, R);
+            G = GetNext(G_direction, G);
+            B = GetNext(B_direction, B);
+            cl5 = new Color(R, G, B);
 
-            switch (R_direction)
-            {
-                case Direction.Front:
-                    R += 1;
-                    break;
-                case Direction.Back:
-                    R -= 1;
-                    break;
-            }
-            
-            switch (G_direction)
-            {
-                case Direction.Front:
-                    G += 1;
-                    break;
-                case Direction.Back:
-                    G -= 1;
-                    break;
-            }
-            
-            switch (B_direction)
-            {
-                case Direction.Front:
-                    B += 1;
-                    break;
-                case Direction.Back:
-                    B -= 1;
-                    break;
-            }
-
-
-            cl5 = new Color(R, G, B); 
+            LerpDirection = LerpBounce(LerpDirection, LerpValue);
+            LerpValue = LerpNext(LerpDirection, LerpValue);
+            cl10 = Color.Lerp(Color.Red, Color.Black, LerpValue);
             base.Update(gameTime);
+        }
+
+        private Direction LerpBounce(Direction lerpDirection, float lerpValue)
+        {
+            Console.WriteLine("LerpDirection => " + lerpDirection + " | LerpValue => " + lerpValue);
+            switch (lerpDirection)
+            {
+                case Direction.Front when lerpValue >= 1.0f:
+                    return Direction.Back;
+                   
+                case Direction.Back when lerpValue <= 0:
+                    return Direction.Front;
+                    break;
+            }
+            
+            return lerpDirection;
+        }
+
+        private Direction ShouldWeFlipDirection(Direction direction, int value)
+        {
+            switch (direction)
+            {
+                case Direction.Front when value == 255:
+                    return Direction.Back;
+                   
+                case Direction.Back when value == 0:
+                    return Direction.Front;
+                    break;
+            }
+            
+            return direction;
         }
 
         private int counter = 0;
@@ -141,25 +123,67 @@ namespace TestingMonoGame
         {
             GraphicsDevice.Clear(cl5);
             counter++;
-            Console.WriteLine("Draw count" + counter);
-            Console.WriteLine(cl4);
+            //Console.WriteLine("Draw count" + counter);
+            Console.WriteLine(cl5);
            
             spriteBatch.Begin();
-            // TODO: Add your drawing code here
-            // Draw the big black rectangle
-            spriteBatch.Draw(pixel, bigRectangle, Color.Black);
-// Draw the small rectangle that changes color on collision
-            spriteBatch.Draw(pixel, smallRectangle, smallRectangleColor);
+            
+            // Draw the big Fading rectangle
+            spriteBatch.Draw(pixel, bigRectangle, cl10);
+            
+            // Draw the small rectangle that changes color on collision
+            spriteBatch.Draw(pixel, smallRectangle, cl10);
             
             spriteBatch.Draw(texture, new Rectangle(100, 100, 100, 100), Color.White);
             spriteBatch.End();
             base.Draw(gameTime);
         }
+
+        public int GetNext(Direction dir, int value)
+        {
+            Console.WriteLine($"Comming in {dir} value => {value}");
+            switch (dir)
+            {
+                case Direction.Front:
+                {
+                    Console.WriteLine("Inside front");
+                    value = ++value;
+                    Console.WriteLine(value);
+                    return value;
+                }
+                case Direction.Back:
+                {
+                    Console.WriteLine("Inside back");
+                    value = --value;
+                    Console.WriteLine(value);
+                    return value;
+                }
+                    
+            }
+
+            return value;
+        }
+
+        public float LerpNext(Direction dir, float value)
+        {
+            if (dir == Direction.Front)
+            {
+                return value + 0.01f;
+            }
+            
+            if(dir == Direction.Back)
+            {
+                return value - 0.01f;
+            }
+
+            return value;
+        }
     }
 
-    enum Direction
+    public enum Direction
     {
         Front,
-        Back
+        Back,
+        None
     }
 }
