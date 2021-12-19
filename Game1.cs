@@ -9,6 +9,8 @@ namespace TestingMonoGame
 {
     public class Game1 : Game
     {
+        private static readonly Random rand = new Random();
+        
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         Texture2D texture;
@@ -39,7 +41,6 @@ namespace TestingMonoGame
         private Direction lerpDirection = Direction.Front;
 
         Texture2D pixel;
-        Rectangle bigRectangle;
        
         private int arrayHeight;
         private int arrayWidth;
@@ -83,19 +84,37 @@ namespace TestingMonoGame
 
             pixel = new Texture2D(GraphicsDevice, 1, 1);
             pixel.SetData<Color>(new Color[] { Color.White });
-            
-            bigRectangle = new Rectangle(10, 10, 300, 150);
         }
 
+        private const float Delay = 1; // seconds
+        private float remainingDelay = Delay;
         protected override void Update(GameTime gameTime)
         {
+            var timer = (float) gameTime.ElapsedGameTime.TotalSeconds;
+            remainingDelay -= timer;
+            
+            Console.WriteLine($"timer is {timer}");
+            
+            if(remainingDelay <= 0)
+            {
+                Console.WriteLine("------");
+
+                foreach (var cell in array2D)
+                {
+                    cell.IsAlive = GetNextRandomBool();
+                    cell.Color = GetRandomColour();
+                }
+                
+                remainingDelay = Delay;
+            }
+
             rDirection = ShouldWeFlipDirection(rDirection, r);
             gDirection = ShouldWeFlipDirection(gDirection, g);
             bDirection = ShouldWeFlipDirection(bDirection, b);
             
-            r = GetNext(rDirection, r);
-            g = GetNext(gDirection, g);
-            b = GetNext(bDirection, b);
+            r = GetNextRGBValue(rDirection, r);
+            g = GetNextRGBValue(gDirection, g);
+            b = GetNextRGBValue(bDirection, b);
             cl5 = new Color(r, g, b);
 
             lerpDirection = LerpBounce(lerpDirection, lerpValue);
@@ -106,30 +125,27 @@ namespace TestingMonoGame
 
         private Direction LerpBounce(Direction direction, float value)
         {
-            switch (direction)
+            return direction switch
             {
-                case Direction.Front when value >= 1.0f:
-                    return Direction.Back;
-                   
-                case Direction.Back when value <= 0:
-                    return Direction.Front;
-            }
-            
-            return direction;
+                Direction.Front when value >= 1.0f => Direction.Back,
+                Direction.Back when value <= 0 => Direction.Front,
+                _ => direction
+            };
         }
 
         private Direction ShouldWeFlipDirection(Direction direction, int value)
         {
-            switch (direction)
+            return direction switch
             {
-                case Direction.Front when value == 255:
-                    return Direction.Back;
-                   
-                case Direction.Back when value == 0:
-                    return Direction.Front;
-            }
-            
-            return direction;
+                Direction.Front when value == 255 => Direction.Back,
+                Direction.Back when value == 0 => Direction.Front,
+                _ => direction
+            };
+        }
+
+        private Color GetRandomColour()
+        {
+            return new Color(rand.Next(256), rand.Next(256), rand.Next(256));
         }
 
         protected override void Draw(GameTime gameTime)
@@ -141,7 +157,10 @@ namespace TestingMonoGame
             {
                 for (int x = 0; x < arrayWidth; x++)
                 {
-                    spriteBatch.Draw(texture, array2D[x, y].Rectangle, cl10);
+                    if (array2D[x,y].IsAlive)
+                    {
+                        spriteBatch.Draw(pixel, array2D[x, y].Rectangle, array2D[x, y].Color);
+                    }
                 }
             }
 
@@ -149,7 +168,7 @@ namespace TestingMonoGame
             base.Draw(gameTime);
         }
 
-        public int GetNext(Direction dir, int value)
+        public int GetNextRGBValue(Direction dir, int value)
         {
             switch (dir)
             {
@@ -181,7 +200,7 @@ namespace TestingMonoGame
         public bool GetNextRandomBool()
         {
             int prob = random.Next(100);
-            return prob <= 80;
+            return prob <= 50;
         }
     }
 
@@ -196,5 +215,6 @@ namespace TestingMonoGame
     {
         public bool IsAlive { get; set; }
         public Rectangle Rectangle { get; set; }
+        public Color Color { get; set; }
     }
 }
