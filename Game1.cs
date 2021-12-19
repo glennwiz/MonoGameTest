@@ -10,7 +10,9 @@ namespace TestingMonoGame
     {
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
-        Texture2D texture; 
+        Texture2D texture;
+
+        private Random random = new Random();
       
         Color cl1 = new Color();
         Color cl2 = new Color(new Vector3(100.0f, 150.0f, 50.0f)); //Vector3
@@ -125,6 +127,9 @@ namespace TestingMonoGame
             
             return direction;
         }
+        
+        
+        
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(cl5);
@@ -134,7 +139,9 @@ namespace TestingMonoGame
             {
                 for (int x = 0; x < arrayWidth; x++)
                 {
-                    spriteBatch.Draw(texture, array2D[x, y], cl10);
+                    var result = GetNextRandomBool();
+                    if(result)
+                        spriteBatch.Draw(texture, array2D[x, y], cl10);
                 }
             }
 
@@ -169,6 +176,12 @@ namespace TestingMonoGame
                 Direction.Back => value - 0.01f,
                 _ => value
             };
+        }
+
+        public bool GetNextRandomBool()
+        {
+            int prob = random.Next(100);
+            return prob <= 50;
         }
     }
 
