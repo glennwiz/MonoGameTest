@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -42,7 +43,7 @@ namespace TestingMonoGame
        
         private int arrayHeight;
         private int arrayWidth;
-        Rectangle[,] array2D;
+        Cell[,] array2D;
 
         public Game1()
         {
@@ -57,13 +58,16 @@ namespace TestingMonoGame
             arrayHeight = graphics.PreferredBackBufferHeight;
             arrayWidth = graphics.PreferredBackBufferWidth;;
 
-            array2D = new Rectangle[arrayWidth,arrayHeight];
+            array2D = new Cell[arrayWidth,arrayHeight];
 
             for (int y = 0; y < arrayHeight; y++)
             {
                 for (int x = 0; x < arrayWidth; x++)
                 {
-                    array2D[x, y] = new Rectangle(x *10, y *10, 8, 8);
+                    var cell = new Cell();
+                    cell.IsAlive = true;
+                    cell.Rectangle = new Rectangle(x * 10, y * 10, 8, 8);
+                    array2D[x, y] = cell;
                 }
             }
             
@@ -127,9 +131,7 @@ namespace TestingMonoGame
             
             return direction;
         }
-        
-        
-        
+
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(cl5);
@@ -139,9 +141,7 @@ namespace TestingMonoGame
             {
                 for (int x = 0; x < arrayWidth; x++)
                 {
-                    var result = GetNextRandomBool();
-                    if(result)
-                        spriteBatch.Draw(texture, array2D[x, y], cl10);
+                    spriteBatch.Draw(texture, array2D[x, y].Rectangle, cl10);
                 }
             }
 
@@ -181,7 +181,7 @@ namespace TestingMonoGame
         public bool GetNextRandomBool()
         {
             int prob = random.Next(100);
-            return prob <= 50;
+            return prob <= 80;
         }
     }
 
@@ -190,5 +190,11 @@ namespace TestingMonoGame
         Front,
         Back,
         None
+    }
+    
+    public class Cell
+    {
+        public bool IsAlive { get; set; }
+        public Rectangle Rectangle { get; set; }
     }
 }
