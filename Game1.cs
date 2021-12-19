@@ -9,15 +9,19 @@ namespace TestingMonoGame
 {
     public class Game1 : Game
     {
-        private static readonly Random rand = new Random();
+        private static readonly Random Random = new Random();
         
         private GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         Texture2D texture;
 
+        private static int cellSizeModifier = 10;
+        
+        Rectangle bigRectangle;
+
         private Random random = new Random();
       
-        Color cl1 = new Color();
+        Color black = new Color();
         Color cl2 = new Color(new Vector3(100.0f, 150.0f, 50.0f)); //Vector3
         Color cl3 = new Color(new Vector4(100.0f, 150.0f, 50.0f, 125.0f)); //Vector4
         Color cl4 = new Color(0.0f, 15.0f, 50.0f); //3-float based
@@ -26,7 +30,7 @@ namespace TestingMonoGame
         Color cl7 = new Color(10, 20, 30, 40); //4-integer based
         Color cl8 = Color.FromNonPremultiplied(new Vector4(100.0f, 0.0f, 15.0f, 100.0f));  //Vector4-based
         Color cl9 = Color.FromNonPremultiplied(10, 20, 30, 100); //int based
-        Color cl10 = Color.Lerp(Color.Red, Color.Black, 50.0f); //Lerp Function
+        Color cl10 = Color.Lerp(Color.Yellow, Color.Black, 50.0f); //Lerp Function
         Color cl11 = Color.Multiply(Color.Pink, 5.0f);  //Multiply Function
         
         
@@ -56,18 +60,23 @@ namespace TestingMonoGame
 
         protected override void Initialize()
         {
+            bigRectangle = new Rectangle(10, 10, graphics.PreferredBackBufferWidth -20, graphics.PreferredBackBufferHeight -20);
+            
             arrayHeight = graphics.PreferredBackBufferHeight;
-            arrayWidth = graphics.PreferredBackBufferWidth;;
+            arrayWidth = graphics.PreferredBackBufferWidth;
 
             array2D = new Cell[arrayWidth,arrayHeight];
 
-            for (int y = 0; y < arrayHeight; y++)
+            for (var y = 0; y < arrayHeight; y++)
             {
-                for (int x = 0; x < arrayWidth; x++)
+                for (var x = 0; x < arrayWidth; x++)
                 {
-                    var cell = new Cell();
-                    cell.IsAlive = true;
-                    cell.Rectangle = new Rectangle(x * 10, y * 10, 8, 8);
+                    var cell = new Cell
+                    {
+                        IsAlive = true,
+                        Rectangle = new Rectangle(x * cellSizeModifier, y * cellSizeModifier, cellSizeModifier -2 ,cellSizeModifier -2),
+                        Color = GetRandomColour()
+                    };
                     array2D[x, y] = cell;
                 }
             }
@@ -83,13 +92,24 @@ namespace TestingMonoGame
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
             pixel = new Texture2D(GraphicsDevice, 1, 1);
-            pixel.SetData<Color>(new Color[] { Color.White });
+            pixel.SetData(new[] { Color.White });
         }
 
         private const float Delay = 1; // seconds
         private float remainingDelay = Delay;
         protected override void Update(GameTime gameTime)
         {
+            var kstate = Keyboard.GetState();
+
+            if (kstate.IsKeyDown(Keys.Up))
+                ++cellSizeModifier;
+
+            if (kstate.IsKeyDown(Keys.Down))
+                --cellSizeModifier;
+          
+
+            base.Update(gameTime);
+            
             var timer = (float) gameTime.ElapsedGameTime.TotalSeconds;
             remainingDelay -= timer;
             
@@ -98,11 +118,46 @@ namespace TestingMonoGame
             if(remainingDelay <= 0)
             {
                 Console.WriteLine("------");
-
-                foreach (var cell in array2D)
+                
+                for (var y = 0; y < arrayHeight; y++)
                 {
-                    cell.IsAlive = GetNextRandomBool();
-                    cell.Color = GetRandomColour();
+                    for (var x = 0; x < arrayWidth; x++)
+                    {
+                        //Console.WriteLine(x +" | " + y);
+                        if(x == 0) continue;
+                        if(y == 0) continue;
+                        if(x == 799) continue;
+                        if(y == 480) continue;
+                        
+                        if(array2D[x,y].IsConnected)
+                            continue;
+                        
+                        var cell = array2D[x, y];
+                        var leftCell = array2D[x - 1, y];
+                        var rightCell = array2D[x + 1, y];
+                        
+                        
+                        var topRange = cell.Color.B + 10;
+                        var bottomRange = cell.Color.B - 10;
+                        
+                        if (leftCell.Color.B < topRange && leftCell.Color.B > bottomRange)
+                        {
+                            cell.Color = Color.Black;
+                            ;
+                            rightCell.IsConnected = true;
+                            rightCell.IsAlive = true;
+                            rightCell.Color = cell.Color;
+                            
+                            leftCell.IsConnected = true;
+                            leftCell.IsAlive = true;
+                            leftCell.Color = Color.Black;
+
+                        }
+                        else
+                        {
+                            cell.Color = GetRandomColour();
+                        }
+                    }
                 }
                 
                 remainingDelay = Delay;
@@ -145,19 +200,22 @@ namespace TestingMonoGame
 
         private Color GetRandomColour()
         {
-            return new Color(rand.Next(256), rand.Next(256), rand.Next(256));
+            return new Color(Random.Next(256), Random.Next(256), Random.Next(256));
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(cl5);
             spriteBatch.Begin();
+            
+            spriteBatch.Draw(texture, bigRectangle, Color.Black);
 
-            for (int y = 0; y < arrayHeight; y++)
+            for (var y = 0; y < arrayHeight; y++)
             {
-                for (int x = 0; x < arrayWidth; x++)
+                for (var x = 0; x < arrayWidth; x++)
                 {
-                    if (array2D[x,y].IsAlive)
+                    if (array2D[x, y].IsAlive && y > 1 && y < graphics.PreferredBackBufferHeight / cellSizeModifier - 2 &&
+                        x < graphics.PreferredBackBufferWidth / cellSizeModifier - 2 && x > 1)
                     {
                         spriteBatch.Draw(pixel, array2D[x, y].Rectangle, array2D[x, y].Color);
                     }
@@ -187,7 +245,7 @@ namespace TestingMonoGame
             }
         }
 
-        public float LerpNext(Direction dir, float value)
+        private static float LerpNext(Direction dir, float value)
         {
             return dir switch
             {
@@ -197,9 +255,9 @@ namespace TestingMonoGame
             };
         }
 
-        public bool GetNextRandomBool()
+        private bool GetNextRandomBool()
         {
-            int prob = random.Next(100);
+            var prob = random.Next(100);
             return prob <= 50;
         }
     }
@@ -216,5 +274,6 @@ namespace TestingMonoGame
         public bool IsAlive { get; set; }
         public Rectangle Rectangle { get; set; }
         public Color Color { get; set; }
+        public bool IsConnected { get; set; }
     }
 }
