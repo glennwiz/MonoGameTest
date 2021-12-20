@@ -128,41 +128,45 @@ namespace TestingMonoGame
                         
                         if(cellArray2D[x,y].IsConnected)
                             continue;
+                      
+                        var topLeft = CellChecker(cellArray2D, x - 1, y - 1);
+                        var topCell = CellChecker(cellArray2D, x, y - 1);
+                        var topRight = CellChecker(cellArray2D, x + 1, y - 1);
+                        var leftCell = CellChecker(cellArray2D, x - 1, y);
+                        var cell = CellChecker(cellArray2D, x, y);
+                        var rightCell = CellChecker(cellArray2D, x + 1, y);
+                        var bottomLeft = CellChecker(cellArray2D, x - 1, y + 1);
+                        var bottomCell = CellChecker(cellArray2D, x, y + 1);
+                        var bottomRight = CellChecker(cellArray2D, x + 1, y + 1);
+                        
+                        
+                        var connectedCells = new List<Cell>
+                        {
+                            topLeft,
+                            topCell,
+                            topRight,
+                            leftCell,
+                            rightCell,
+                            bottomLeft,
+                            bottomCell,
+                            bottomRight
+                        };
 
-                        var topLeft = cellArray2D[x - 1, y - 1];
-                        var topCell = cellArray2D[x, y - 1];
-                        var topRight = cellArray2D[x + 1, y - 1];
-                        var leftCell = cellArray2D[x - 1, y];
-                        var cell = cellArray2D[x, y];
-                        var rightCell = cellArray2D[x + 1, y];
-                        var bottomLeft = cellArray2D[x - 1, y + 1];
-                        var bottomCell = cellArray2D[x, y + 1];
-                        var bottomRight = cellArray2D[x + 1, y + 1];
-                       
-                        var connectedCells = new List<Cell>();
-                        connectedCells.Add(topLeft);
-                        connectedCells.Add(topCell);
-                        connectedCells.Add(topRight);
-                        connectedCells.Add(leftCell);
-                        connectedCells.Add(cell);
-                        connectedCells.Add(rightCell);
-                        connectedCells.Add(bottomLeft);
-                        connectedCells.Add(bottomCell);
-                        connectedCells.Add(bottomRight);
-
-                        var topRangeR = cell.Color.R + 10;
-                        var topRangeB = cell.Color.B + 10;
-                        var topRangeG = cell.Color.G + 10;
+                        var topRangeR = cell.Color.R + 50;
+                        var topRangeB = cell.Color.B + 50;
+                        var topRangeG = cell.Color.G + 50;
                         
                         var topRangeTouple = new Tuple<int, int, int>(topRangeR, topRangeG, topRangeB);
                         
-                        var bottomRangeR = cell.Color.R - 10;
-                        var bottomRange = cell.Color.B - 10;
-                        var bottomRangeG = cell.Color.G - 10;
+                        var bottomRangeR = cell.Color.R - 50;
+                        var bottomRange = cell.Color.B - 50;
+                        var bottomRangeG = cell.Color.G - 50;
                         
                         var bottomRangeTouple = new Tuple<int, int, int>(bottomRangeR, bottomRangeG, bottomRange);
                         
-                         CheckIfColorInRangeAndIfItIsChangColourToCellsColour(cell.Color, topRangeTouple, bottomRangeTouple, connectedCells); }
+                        //TODO: WIP - need to fix this
+                        
+                        CheckIfColorInRangeAndIfItIsChangColourToCellsColour(cell.Color, topRangeTouple, bottomRangeTouple, connectedCells); }
                 }
                 
                 remainingDelay = Delay;
@@ -177,17 +181,35 @@ namespace TestingMonoGame
             base.Update(gameTime);
         }
 
+        private Cell CellChecker(Cell[,] cells, int i, int i1)
+        {
+            try
+            {
+                return cells[i, i1];
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         private void CheckIfColorInRangeAndIfItIsChangColourToCellsColour(Color cellColor, Tuple<int, int, int> topRangeTouple, Tuple<int, int, int> bottomRangeTouple, List<Cell> connectedCells)
         {
             foreach (var connectedCell in connectedCells)
             {
+                if (connectedCell == null)
+                    continue;
+                
                 //check if cell is in range
                 if (connectedCell.Color.R >= bottomRangeTouple.Item1 && connectedCell.Color.R <= topRangeTouple.Item1)
                 {
+                    //Console.WriteLine("R");
                     if (connectedCell.Color.G >= bottomRangeTouple.Item2 && connectedCell.Color.G <= topRangeTouple.Item2)
                     {
+                        //Console.WriteLine("G");
                         if (connectedCell.Color.B >= bottomRangeTouple.Item3 && connectedCell.Color.B <= topRangeTouple.Item3)
                         {
+                            //Console.WriteLine("B");
                             //cell color is in range
                             connectedCell.IsConnected = true;
                             connectedCell.IsAlive = true;
