@@ -149,9 +149,7 @@ namespace TestingMonoGame
                         connectedCells.Add(bottomLeft);
                         connectedCells.Add(bottomCell);
                         connectedCells.Add(bottomRight);
-                        
-                        
-                        
+
                         var topRangeR = cell.Color.R + 10;
                         var topRangeB = cell.Color.B + 10;
                         var topRangeG = cell.Color.G + 10;
@@ -164,28 +162,7 @@ namespace TestingMonoGame
                         
                         var bottomRangeTouple = new Tuple<int, int, int>(bottomRangeR, bottomRangeG, bottomRange);
                         
-                         //CheckIfColorInRangeAndIfItIsChangColourToCellsColour(cell.Color, topRangeTouple, bottomRangeTouple, connectedCells);
-                        
-                        //check left
-                       
-
-                        if (leftCell.Color.B < topRange && leftCell.Color.B > bottomRange)
-                        {
-                            cell.Color = Color.Black;
-                            
-                            rightCell.IsConnected = true;
-                            rightCell.IsAlive = true;
-                            rightCell.Color = cell.Color;
-                            
-                            leftCell.IsConnected = true;
-                            leftCell.IsAlive = true;
-                            leftCell.Color = Color.Black;
-                        }
-                        else
-                        {
-                            cell.Color = GetRandomColour();
-                        }
-                    }
+                         CheckIfColorInRangeAndIfItIsChangColourToCellsColour(cell.Color, topRangeTouple, bottomRangeTouple, connectedCells); }
                 }
                 
                 remainingDelay = Delay;
