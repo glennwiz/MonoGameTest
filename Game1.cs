@@ -221,9 +221,11 @@ namespace TestingMonoGame
                             {
                                 if (cell == null)
                                     continue;
-                                
-                                
-                                cell.Color = cellColor;
+
+                                var random = GetNextRandomBool(100); //change this to edit the random color distribution 100% is keeps the color
+                               //Console.WriteLine(random);
+                                cell.Color = random ? cellColor : GetRandomColour();
+
                             }
                         }
                     }
@@ -287,10 +289,10 @@ namespace TestingMonoGame
             };
         }
 
-        private bool GetNextRandomBool()
+        private bool GetNextRandomBool(int probabilty)
         {
             var prob = random.Next(100);
-            return prob <= 50;
+            return prob <= probabilty;
         }
         
         private void GetRollingBackgroundColor()
@@ -343,7 +345,6 @@ namespace TestingMonoGame
         public Rectangle Rectangle { get; set; }
         public Color Color { get; set; }
         public bool IsConnected { get; set; }
-        
-        
+
     }
 }
