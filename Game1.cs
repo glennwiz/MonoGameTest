@@ -152,21 +152,22 @@ namespace TestingMonoGame
                             bottomRight
                         };
 
-                        var topRangeR = cell.Color.R + 50;
-                        var topRangeB = cell.Color.B + 50;
-                        var topRangeG = cell.Color.G + 50;
+                        var topRangeR = cell.Color.R + 10;
+                        var topRangeB = cell.Color.B + 10;
+                        var topRangeG = cell.Color.G + 10;
                         
                         var topRangeTouple = new Tuple<int, int, int>(topRangeR, topRangeG, topRangeB);
                         
-                        var bottomRangeR = cell.Color.R - 50;
-                        var bottomRange = cell.Color.B - 50;
-                        var bottomRangeG = cell.Color.G - 50;
+                        var bottomRangeR = cell.Color.R - 10;
+                        var bottomRange = cell.Color.B - 10;
+                        var bottomRangeG = cell.Color.G - 10;
                         
                         var bottomRangeTouple = new Tuple<int, int, int>(bottomRangeR, bottomRangeG, bottomRange);
                         
                         //TODO: WIP - need to fix this
                         
-                        CheckIfColorInRangeAndIfItIsChangColourToCellsColour(cell.Color, topRangeTouple, bottomRangeTouple, connectedCells); }
+                        CheckIfColorInRangeAndIfItIsChangColourToCellsColour(cell.Color, topRangeTouple, bottomRangeTouple, connectedCells); 
+                    }
                 }
                 
                 remainingDelay = Delay;
@@ -195,6 +196,7 @@ namespace TestingMonoGame
 
         private void CheckIfColorInRangeAndIfItIsChangColourToCellsColour(Color cellColor, Tuple<int, int, int> topRangeTouple, Tuple<int, int, int> bottomRangeTouple, List<Cell> connectedCells)
         {
+            
             foreach (var connectedCell in connectedCells)
             {
                 if (connectedCell == null)
@@ -214,6 +216,15 @@ namespace TestingMonoGame
                             connectedCell.IsConnected = true;
                             connectedCell.IsAlive = true;
                             connectedCell.Color = cellColor;
+
+                            foreach (var cell in connectedCells)
+                            {
+                                if (cell == null)
+                                    continue;
+                                
+                                
+                                cell.Color = cellColor;
+                            }
                         }
                     }
                 }
