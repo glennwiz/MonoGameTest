@@ -49,8 +49,8 @@ namespace TestingMonoGame
 
         Texture2D pixel;
 
-        private Cell[,] cellArray0;
-        private Cell[,] cellArray1;
+        private Cell[,] cellArrayGen0;
+        private Cell[,] cellArrayGen1;
         
         private int arrayHeight;
         private int arrayWidth;
@@ -69,8 +69,8 @@ namespace TestingMonoGame
             arrayHeight = graphics.PreferredBackBufferHeight;
             arrayWidth = graphics.PreferredBackBufferWidth;
 
-            cellArray0 = new Cell[graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight];
-            cellArray1 = new Cell[graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight];
+            cellArrayGen0 = new Cell[graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight];
+            cellArrayGen1 = new Cell[graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight];
             
             for (var y = 0; y < arrayHeight; y++)
             {
@@ -78,19 +78,36 @@ namespace TestingMonoGame
                 {
                     var cell = new Cell
                     {
-                        IsAlive = false,
+                        IsAlive = GetNextRandomBool(50),
                         Rectangle = new Rectangle(x * cellSizeModifier, y * cellSizeModifier, cellSizeModifier -2 ,cellSizeModifier -2),
                         Color = GetRandomColour()
                     };
-                    cellArray0[x, y] = cell;
+                    cellArrayGen0[x, y] = cell;
                 }
             }
             
-            cellArray0[32, 10].IsAlive = true;
-            cellArray0[33, 11].IsAlive = true;
-            cellArray0[33, 12].IsAlive = true;
-            cellArray0[34, 10].IsAlive = true;
-            cellArray0[34, 11].IsAlive = true;
+            cellArrayGen1 = cellArrayGen0.Clone() as Cell[,];
+
+            #region walker
+            // cellArrayGen0[32, 10].IsAlive = true;
+            // cellArrayGen0[33, 11].IsAlive = true;
+            // cellArrayGen0[33, 12].IsAlive = true;
+            // cellArrayGen0[34, 10].IsAlive = true;
+            // cellArrayGen0[34, 11].IsAlive = true;
+            #endregion
+            
+            
+            #region Blink
+            // cellArrayGen0[12, 12].IsAlive = true;
+            // cellArrayGen0[12, 13].IsAlive = true;
+            // cellArrayGen0[12, 14].IsAlive = true;
+            // cellArrayGen0[13, 12].IsAlive = true;
+            // cellArrayGen0[13, 13].IsAlive = true;
+            // cellArrayGen0[13, 14].IsAlive = true;
+            // cellArrayGen0[14, 12].IsAlive = true;
+            // cellArrayGen0[14, 13].IsAlive = true;
+            // cellArrayGen0[14, 14].IsAlive = true;
+            #endregion
 
             texture = new Texture2D(GraphicsDevice, 1, 1);
             texture.SetData(new Color[] { Color.DarkSlateGray });
@@ -116,7 +133,7 @@ namespace TestingMonoGame
             
             if(remainingDelay <= 0)
             {
-                Console.WriteLine("------");
+                Console.WriteLine("------" + remainingDelay);
                 
                 for (var y = 0; y < arrayHeight; y++)
                 {
@@ -140,11 +157,29 @@ namespace TestingMonoGame
                                     All other live cells die in the next generation. Similarly, all other dead cells stay dead.
                         */
 
-                       
+                        try
+                        {
+                                                    
 
+                            var isAlive = CheckIfGen0StillAliveInGen1(x, y, cellArrayGen0);
 
+                            cellArrayGen1[x, y].IsAlive = isAlive ? true : false;
+                            
+                            if (isAlive)
+                            {
+                                //Console.WriteLine("Cell at {0},{1} is alive: {2}", x, y, isAlive);
+                            }
+                          
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
                     }
                 }
+                
+                //swap the arrays
+                cellArrayGen0 = cellArrayGen1.Clone() as Cell[,];
                 
                 remainingDelay = Delay;
             }
@@ -157,6 +192,67 @@ namespace TestingMonoGame
             cl10 = Color.Lerp(Color.Red, Color.Black, lerpValue);
             base.Update(gameTime);
         }
+        
+        private static bool CheckIfGen0StillAliveInGen1(int x, int y, Cell[,] arrayGen0)
+        {
+            int countNaboursAlive = 0;
+
+            var resultList = new List<bool>
+            {
+                CheckCords(x - 1, y - 1, arrayGen0),
+                CheckCords(x, y - 1, arrayGen0),
+                CheckCords(x + 1, y - 1, arrayGen0),
+                CheckCords(x - 1, y, arrayGen0),
+                CheckCords(x + 1, y, arrayGen0),
+                CheckCords(x - 1, y + 1, arrayGen0),
+                CheckCords(x, y + 1, arrayGen0),
+                CheckCords(x + 1, y + 1, arrayGen0)
+            };
+            
+            foreach (var item in resultList)
+            {
+                if (item)
+                {
+                    countNaboursAlive++;
+                }
+            }
+
+            var cell = arrayGen0[x, y];
+
+            switch (cell.IsAlive)
+            {
+                case true:
+                    if (countNaboursAlive == 2 || countNaboursAlive == 3) 
+                    {                        
+                        return true;
+                    }
+                    else
+                        return false;
+                default:
+                    if (countNaboursAlive == 3)
+                    {                       
+                        return true;
+                    }
+                    else
+                        return false;
+            }
+
+        }
+        private static bool CheckCords(int offsettX, int offsettY, Cell[,] arrayGen0)
+        {
+            try
+            {
+                var cell = arrayGen0[offsettX, offsettY];              
+                if (cell.IsAlive == true)
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception ex)
+            {               
+                return false;
+            }
+        }       
 
         private Cell CellChecker(Cell[,] cells, int i, int i1)
         {
@@ -186,9 +282,9 @@ namespace TestingMonoGame
                                              x < graphics.PreferredBackBufferWidth / cellSizeModifier - 2 && //Right border
                                              x > 1; //Left border
                             
-                    if (cellArray0[x, y].IsAlive && drawSquaresWithinBorders)
+                    if (cellArrayGen0[x, y].IsAlive && drawSquaresWithinBorders)
                     {
-                        spriteBatch.Draw(pixel, cellArray0[x, y].Rectangle, cellArray0[x, y].Color);
+                        spriteBatch.Draw(pixel, cellArrayGen0[x, y].Rectangle, cellArrayGen0[x, y].Color);
                     }
                 }
             }
