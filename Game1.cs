@@ -48,10 +48,12 @@ namespace TestingMonoGame
         private Direction lerpDirection = Direction.Front;
 
         Texture2D pixel;
-       
+
+        private Cell[,] cellArray0;
+        private Cell[,] cellArray1;
+        
         private int arrayHeight;
         private int arrayWidth;
-        Cell[,] cellArray2D;
 
         public Game1()
         {
@@ -67,22 +69,29 @@ namespace TestingMonoGame
             arrayHeight = graphics.PreferredBackBufferHeight;
             arrayWidth = graphics.PreferredBackBufferWidth;
 
-            cellArray2D = new Cell[arrayWidth,arrayHeight];
-
+            cellArray0 = new Cell[graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight];
+            cellArray1 = new Cell[graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight];
+            
             for (var y = 0; y < arrayHeight; y++)
             {
                 for (var x = 0; x < arrayWidth; x++)
                 {
                     var cell = new Cell
                     {
-                        IsAlive = true,
+                        IsAlive = false,
                         Rectangle = new Rectangle(x * cellSizeModifier, y * cellSizeModifier, cellSizeModifier -2 ,cellSizeModifier -2),
                         Color = GetRandomColour()
                     };
-                    cellArray2D[x, y] = cell;
+                    cellArray0[x, y] = cell;
                 }
             }
             
+            cellArray0[32, 10].IsAlive = true;
+            cellArray0[33, 11].IsAlive = true;
+            cellArray0[33, 12].IsAlive = true;
+            cellArray0[34, 10].IsAlive = true;
+            cellArray0[34, 11].IsAlive = true;
+
             texture = new Texture2D(GraphicsDevice, 1, 1);
             texture.SetData(new Color[] { Color.DarkSlateGray });
 
@@ -100,14 +109,6 @@ namespace TestingMonoGame
   
         protected override void Update(GameTime gameTime)
         {
-            var kstate = Keyboard.GetState();
-
-            if (kstate.IsKeyDown(Keys.Up))
-                ++cellSizeModifier;
-
-            if (kstate.IsKeyDown(Keys.Down))
-                --cellSizeModifier;
-
             base.Update(gameTime);
             
             var timer = (float) gameTime.ElapsedGameTime.TotalSeconds;
@@ -125,48 +126,23 @@ namespace TestingMonoGame
                         if(y == 0) continue; //skip first row       
                         if(x == 799) continue; //skip last column
                         if(y == 480) continue; //skip last row
-                        
-                        if(cellArray2D[x,y].IsConnected)
-                            continue;
-                      
-                        var topLeft = CellChecker(cellArray2D, x - 1, y - 1);
-                        var topCell = CellChecker(cellArray2D, x, y - 1);
-                        var topRight = CellChecker(cellArray2D, x + 1, y - 1);
-                        var leftCell = CellChecker(cellArray2D, x - 1, y);
-                        var cell = CellChecker(cellArray2D, x, y);
-                        var rightCell = CellChecker(cellArray2D, x + 1, y);
-                        var bottomLeft = CellChecker(cellArray2D, x - 1, y + 1);
-                        var bottomCell = CellChecker(cellArray2D, x, y + 1);
-                        var bottomRight = CellChecker(cellArray2D, x + 1, y + 1);
-                        
-                        
-                        var connectedCells = new List<Cell>
-                        {
-                            topLeft,
-                            topCell,
-                            topRight,
-                            leftCell,
-                            rightCell,
-                            bottomLeft,
-                            bottomCell,
-                            bottomRight
-                        };
 
-                        var topRangeR = cell.Color.R + 10;
-                        var topRangeB = cell.Color.B + 10;
-                        var topRangeG = cell.Color.G + 10;
-                        
-                        var topRangeTouple = new Tuple<int, int, int>(topRangeR, topRangeG, topRangeB);
-                        
-                        var bottomRangeR = cell.Color.R - 10;
-                        var bottomRange = cell.Color.B - 10;
-                        var bottomRangeG = cell.Color.G - 10;
-                        
-                        var bottomRangeTouple = new Tuple<int, int, int>(bottomRangeR, bottomRangeG, bottomRange);
-                        
-                        //TODO: WIP - need to fix this
-                        
-                        CheckIfColorInRangeAndIfItIsChangColourToCellsColour(cell.Color, topRangeTouple, bottomRangeTouple, connectedCells); 
+                        /*  Conways Game Of Life Rules 
+                         
+                            Any live cell with fewer than two live neighbours dies, as if by underpopulation.
+                            Any live cell with two or three live neighbours lives on to the next generation.
+                            Any live cell with more than three live neighbours dies, as if by overpopulation.
+                            Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+                            
+                            These rules, which compare the behavior of the automaton to real life, can be condensed into the following:
+                                    Any live cell with two or three live neighbours survives.
+                                    Any dead cell with three live neighbours becomes a live cell.
+                                    All other live cells die in the next generation. Similarly, all other dead cells stay dead.
+                        */
+
+                       
+
+
                     }
                 }
                 
@@ -194,45 +170,6 @@ namespace TestingMonoGame
             }
         }
 
-        private void CheckIfColorInRangeAndIfItIsChangColourToCellsColour(Color cellColor, Tuple<int, int, int> topRangeTouple, Tuple<int, int, int> bottomRangeTouple, List<Cell> connectedCells)
-        {
-            
-            foreach (var connectedCell in connectedCells)
-            {
-                if (connectedCell == null)
-                    continue;
-                
-                //check if cell is in range
-                if (connectedCell.Color.R >= bottomRangeTouple.Item1 && connectedCell.Color.R <= topRangeTouple.Item1)
-                {
-                    //Console.WriteLine("R");
-                    if (connectedCell.Color.G >= bottomRangeTouple.Item2 && connectedCell.Color.G <= topRangeTouple.Item2)
-                    {
-                        //Console.WriteLine("G");
-                        if (connectedCell.Color.B >= bottomRangeTouple.Item3 && connectedCell.Color.B <= topRangeTouple.Item3)
-                        {
-                            //Console.WriteLine("B");
-                            //cell color is in range
-                            connectedCell.IsConnected = true;
-                            connectedCell.IsAlive = true;
-                            connectedCell.Color = cellColor;
-
-                            foreach (var cell in connectedCells)
-                            {
-                                if (cell == null)
-                                    continue;
-
-                                var random = GetNextRandomBool(100); //change this to edit the random color distribution 100% is keeps the color
-                               //Console.WriteLine(random);
-                                cell.Color = random ? cellColor : GetRandomColour();
-
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(cl5);
@@ -249,9 +186,9 @@ namespace TestingMonoGame
                                              x < graphics.PreferredBackBufferWidth / cellSizeModifier - 2 && //Right border
                                              x > 1; //Left border
                             
-                    if (cellArray2D[x, y].IsAlive && drawSquaresWithinBorders)
+                    if (cellArray0[x, y].IsAlive && drawSquaresWithinBorders)
                     {
-                        spriteBatch.Draw(pixel, cellArray2D[x, y].Rectangle, cellArray2D[x, y].Color);
+                        spriteBatch.Draw(pixel, cellArray0[x, y].Rectangle, cellArray0[x, y].Color);
                     }
                 }
             }
