@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -78,9 +79,9 @@ namespace TestingMonoGame
                 {
                     var cell = new Cell
                     {
-                        IsAlive = GetNextRandomBool(50),
+                        IsAlive = GetNextRandomBool(7),
                         Rectangle = new Rectangle(x * cellSizeModifier, y * cellSizeModifier, cellSizeModifier -2 ,cellSizeModifier -2),
-                        Color = GetRandomColour()
+                        Color = cl5//GetRandomColour()
                     };
                     cellArrayGen0[x, y] = cell;
                 }
@@ -88,7 +89,7 @@ namespace TestingMonoGame
             
             cellArrayGen1 = cellArrayGen0.Clone() as Cell[,];
 
-            #region walker
+            #region Walker
             // cellArrayGen0[32, 10].IsAlive = true;
             // cellArrayGen0[33, 11].IsAlive = true;
             // cellArrayGen0[33, 12].IsAlive = true;
@@ -133,7 +134,7 @@ namespace TestingMonoGame
             
             if(remainingDelay <= 0)
             {
-                Console.WriteLine("------" + remainingDelay);
+                Console.WriteLine("------" + DateTime.Now.ToString("hh:mm:ss") + "------");
                 
                 for (var y = 0; y < arrayHeight; y++)
                 {
@@ -187,6 +188,14 @@ namespace TestingMonoGame
             GetRollingBackgroundColor();
             cl5 = new Color(r, g, b);
 
+            foreach (var cell in cellArrayGen0)
+            {
+                if (cell.IsAlive)
+                {
+                    cell.Color = cl5;
+                }
+            }
+
             lerpDirection = LerpBounce(lerpDirection, lerpValue);
             lerpValue = LerpNext(lerpDirection, lerpValue);
             cl10 = Color.Lerp(Color.Red, Color.Black, lerpValue);
@@ -195,8 +204,6 @@ namespace TestingMonoGame
         
         private static bool CheckIfGen0StillAliveInGen1(int x, int y, Cell[,] arrayGen0)
         {
-            int countNaboursAlive = 0;
-
             var resultList = new List<bool>
             {
                 CheckCords(x - 1, y - 1, arrayGen0),
@@ -208,29 +215,24 @@ namespace TestingMonoGame
                 CheckCords(x, y + 1, arrayGen0),
                 CheckCords(x + 1, y + 1, arrayGen0)
             };
-            
-            foreach (var item in resultList)
-            {
-                if (item)
-                {
-                    countNaboursAlive++;
-                }
-            }
+
+            int neighboursAlive = resultList.Count(item => item);
 
             var cell = arrayGen0[x, y];
-
+    
             switch (cell.IsAlive)
             {
                 case true:
-                    if (countNaboursAlive == 2 || countNaboursAlive == 3) 
+                    if (neighboursAlive == 2 || neighboursAlive == 3) 
                     {                        
                         return true;
                     }
                     else
                         return false;
                 default:
-                    if (countNaboursAlive == 3)
-                    {                       
+                    if (neighboursAlive == 3)
+                    {
+                        //Console.WriteLine("resurect a cell at {0},{1}", x, y);
                         return true;
                     }
                     else
